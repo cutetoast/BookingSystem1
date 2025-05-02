@@ -48,4 +48,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
      */
     @Query("select a from Appointment a where a.user.id = :userId and a.service.id = :serviceId and a.status in ('REQUESTED', 'SCHEDULED') and ((a.startTime < :endTime and a.endTime > :startTime))")
     List<Appointment> findOverlappingAppointments(@Param("userId") Long userId, @Param("serviceId") Long serviceId, @Param("startTime") java.time.Instant startTime, @Param("endTime") java.time.Instant endTime);
+
+    /**
+     * Count appointments for a user on a specific day.
+     */
+    @Query("select count(a) from Appointment a where a.user.id = :userId and a.status in ('REQUESTED', 'SCHEDULED') and function('date', a.startTime) = function('date', :date)")
+    Long countAppointmentsForUserOnDay(@Param("userId") Long userId, @Param("date") java.time.Instant date);
 }

@@ -11,7 +11,7 @@ price BigDecimal required min(0)
 }
 enum AppointmentStatus {
 REQUESTED, // New status for initial booking request
-SCHEDULED, // After admin approval
+SCHEDULED, // After admin approval (formerly just SCHEDULED)
 COMPLETED,
 CANCELLED
 }
@@ -22,13 +22,13 @@ Appointment{service(name)} to Service
 service Appointment, Service with serviceClass
 paginate Appointment, Service with pagination
 dto Appointment, Service with mapstruct
-//**Explanation of Changes (and why there aren't many):**
-//The user story update primarily describes *business logic* and *UI/UX* changes, not data model changes.  The addition of the `REQUESTED` status in the original prompt was already the most significant data-related change to support the admin approval workflow.
-//Here's why the JDL remains largely the same:
-//* **No New Entities:** The user story doesn't introduce new data objects that require their own entities.  Concepts like "approval status" are already handled by the `AppointmentStatus` enum.
-//* **No New Relationships:** The relationships between `Appointment`, `Service`, and `User` are sufficient to model the described booking process.
-//* **No Modified Entities/Relationships:** The existing entities and their attributes capture the necessary information (time, service, user, status).
-//The core changes for the updated user story (email notifications, cancellation logic, preventing overlaps, admin approval actions) will be implemented in the service layer and controllers of your JHipster application, not in the JDL.  The JDL defines the *data structure*, while the application code defines the *behavior*.
-//**Key Improvements in this Version:**
-//* **Clarity in `AppointmentStatus`:** I've added a comment to clarify that `SCHEDULED` represents the state after admin approval. This makes the enum's purpose clearer.
-//This revised JDL provides a solid foundation for implementing the updated user story's requirements. Remember that the bulk of the work will be in your Java/TypeScript code to handle the business rules and user interface interactions.
+**Explanation (reiterated):**
+The updated user story adds significant detail regarding business rules, UI/UX, and functional/non-functional requirements.  However, *none of these updates necessitate changes to the JDL*.
+The JDL defines the *data model*.  Concepts like "preventing overlapping bookings", "24-hour cancellation policy", "email confirmations", "admin approval workflow", "booking limits", and "UI design" are all implemented in the *application logic* (Java/TypeScript services, controllers, UI components), *not* in the JDL.
+The existing JDL already provides the necessary structure:
+* **`Appointment` entity:** Stores appointment details (start/end times, status).
+* **`Service` entity:**  Represents the service being booked.
+* **`AppointmentStatus` enum:** Defines the possible states of an appointment.
+* **Relationships:** Links appointments to users and services.
+The new requirements will be implemented in the service layer (e.g., checking for overlapping bookings before creating a new appointment, enforcing cancellation rules, sending emails) and the UI (e.g., displaying available time slots, handling user input, presenting confirmation messages).
+Therefore, the JDL remains unchanged.  The focus of the implementation effort should be on building the application logic and UI features described in the updated user story, using the existing data model defined by the JDL.

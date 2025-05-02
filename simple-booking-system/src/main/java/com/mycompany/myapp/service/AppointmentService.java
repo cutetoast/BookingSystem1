@@ -1,8 +1,10 @@
 package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.domain.Appointment;
+import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.domain.enumeration.AppointmentStatus;
 import com.mycompany.myapp.repository.AppointmentRepository;
+import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.service.dto.AppointmentDTO;
 import com.mycompany.myapp.service.mapper.AppointmentMapper;
 import java.util.Optional;
@@ -21,14 +23,27 @@ import org.springframework.transaction.annotation.Transactional;
 public class AppointmentService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AppointmentService.class);
+    
+    private static final int MAX_APPOINTMENTS_PER_DAY = 3;
 
     private final AppointmentRepository appointmentRepository;
 
     private final AppointmentMapper appointmentMapper;
+    
+    private final MailService mailService;
+    
+    private final UserRepository userRepository;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, AppointmentMapper appointmentMapper) {
+    public AppointmentService(
+        AppointmentRepository appointmentRepository, 
+        AppointmentMapper appointmentMapper,
+        MailService mailService,
+        UserRepository userRepository
+    ) {
         this.appointmentRepository = appointmentRepository;
         this.appointmentMapper = appointmentMapper;
+        this.mailService = mailService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -42,6 +57,7 @@ public class AppointmentService {
         Appointment appointment = appointmentMapper.toEntity(appointmentDTO);
         // Set status to REQUESTED by default for new appointments
         appointment.setStatus(AppointmentStatus.REQUESTED);
+        
         // Prevent overlapping appointments for the same user/service
         if (appointment.getUser() != null && appointment.getService() != null) {
             var overlaps = appointmentRepository.findOverlappingAppointments(
@@ -53,7 +69,18 @@ public class AppointmentService {
             if (!overlaps.isEmpty()) {
                 throw new IllegalStateException("Overlapping appointment exists for this user and service in the selected time range.");
             }
+            
+            // Check if user has already booked 3 appointments on this day
+            Long appointmentsCount = appointmentRepository.countAppointmentsForUserOnDay(
+                appointment.getUser().getId(),
+                appointment.getStartTime()
+            );
+            
+            if (appointmentsCount >= MAX_APPOINTMENTS_PER_DAY) {
+                throw new IllegalStateException("You have reached the maximum limit of " + MAX_APPOINTMENTS_PER_DAY + " bookings per day.");
+            }
         }
+        
         appointment = appointmentRepository.save(appointment);
         return appointmentMapper.toDto(appointment);
     }
@@ -150,8 +177,14 @@ public class AppointmentService {
                 if (appointment.getStatus() == AppointmentStatus.REQUESTED) {
                     LOG.info("Updating appointment status from REQUESTED to SCHEDULED");
                     appointment.setStatus(AppointmentStatus.SCHEDULED);
-                    appointmentRepository.save(appointment);
-                    return appointmentMapper.toDto(appointment);
+                    appointment = appointmentRepository.save(appointment);
+                    
+                    // Send confirmation email to user
+                    User user = appointment.getUser();
+                    AppointmentDTO appointmentDTO = appointmentMapper.toDto(appointment);
+                    mailService.sendAppointmentConfirmationEmail(user, appointmentDTO);
+                    
+                    return appointmentDTO;
                 } else {
                     LOG.warn("Cannot approve appointment with status: {}", appointment.getStatus());
                     return appointmentMapper.toDto(appointment);
@@ -175,8 +208,14 @@ public class AppointmentService {
                 if (appointment.getStatus() == AppointmentStatus.REQUESTED) {
                     LOG.info("Updating appointment status from REQUESTED to CANCELLED");
                     appointment.setStatus(AppointmentStatus.CANCELLED);
-                    appointmentRepository.save(appointment);
-                    return appointmentMapper.toDto(appointment);
+                    appointment = appointmentRepository.save(appointment);
+                    
+                    // Notify user of rejection
+                    User user = appointment.getUser();
+                    AppointmentDTO appointmentDTO = appointmentMapper.toDto(appointment);
+                    mailService.sendAppointmentCancellationEmail(user, appointmentDTO);
+                    
+                    return appointmentDTO;
                 } else {
                     LOG.warn("Cannot reject appointment with status: {}", appointment.getStatus());
                     return appointmentMapper.toDto(appointment);

@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Col, FormText, Row } from 'reactstrap';
+import { Button, Col, FormText, Row, Alert } from 'reactstrap';
 import { Translate, ValidatedField, ValidatedForm, translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -14,8 +14,8 @@ import { createEntity, getEntity, reset, updateEntity } from './appointment.redu
 
 export const AppointmentUpdate = () => {
   const dispatch = useAppDispatch();
-
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { id } = useParams<'id'>();
   const isNew = id === undefined;
@@ -56,6 +56,11 @@ export const AppointmentUpdate = () => {
     values.startTime = convertDateTimeToServer(values.startTime);
     values.endTime = convertDateTimeToServer(values.endTime);
 
+    if (values.endTime <= values.startTime) {
+      setErrorMessage('End time must be after start time');
+      return;
+    }
+
     const entity = {
       ...appointmentEntity,
       ...values,
@@ -64,9 +69,26 @@ export const AppointmentUpdate = () => {
     };
 
     if (isNew) {
-      dispatch(createEntity(entity));
+      entity.status = 'REQUESTED';
+      dispatch(createEntity(entity))
+        .unwrap()
+        .catch(error => {
+          if (error && error.message) {
+            setErrorMessage(error.message);
+          } else {
+            setErrorMessage('Error creating appointment');
+          }
+        });
     } else {
-      dispatch(updateEntity(entity));
+      dispatch(updateEntity(entity))
+        .unwrap()
+        .catch(error => {
+          if (error && error.message) {
+            setErrorMessage(error.message);
+          } else {
+            setErrorMessage('Error updating appointment');
+          }
+        });
     }
   };
 
@@ -99,102 +121,117 @@ export const AppointmentUpdate = () => {
           {loading ? (
             <p>Loading...</p>
           ) : (
-            <ValidatedForm defaultValues={defaultValues()} onSubmit={saveEntity}>
-              {!isNew ? (
+            <>
+              {errorMessage && (
+                <Alert color="danger" fade={false}>
+                  {errorMessage}
+                </Alert>
+              )}
+              <ValidatedForm defaultValues={defaultValues()} onSubmit={saveEntity}>
+                {!isNew ? (
+                  <ValidatedField
+                    name="id"
+                    required
+                    readOnly
+                    id="appointment-id"
+                    label={translate('global.field.id')}
+                    validate={{ required: true }}
+                  />
+                ) : null}
                 <ValidatedField
-                  name="id"
-                  required
-                  readOnly
-                  id="appointment-id"
-                  label={translate('global.field.id')}
-                  validate={{ required: true }}
+                  label={translate('simpleBookingSystemApp.appointment.startTime')}
+                  id="appointment-startTime"
+                  name="startTime"
+                  data-cy="startTime"
+                  type="datetime-local"
+                  placeholder="YYYY-MM-DD HH:mm"
+                  validate={{
+                    required: { value: true, message: translate('entity.validation.required') },
+                  }}
                 />
-              ) : null}
-              <ValidatedField
-                label={translate('simpleBookingSystemApp.appointment.startTime')}
-                id="appointment-startTime"
-                name="startTime"
-                data-cy="startTime"
-                type="datetime-local"
-                placeholder="YYYY-MM-DD HH:mm"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('simpleBookingSystemApp.appointment.endTime')}
-                id="appointment-endTime"
-                name="endTime"
-                data-cy="endTime"
-                type="datetime-local"
-                placeholder="YYYY-MM-DD HH:mm"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('simpleBookingSystemApp.appointment.status')}
-                id="appointment-status"
-                name="status"
-                data-cy="status"
-                type="select"
-              >
-                {appointmentStatusValues.map(appointmentStatus => (
-                  <option value={appointmentStatus} key={appointmentStatus}>
-                    {translate(`simpleBookingSystemApp.AppointmentStatus.${appointmentStatus}`)}
-                  </option>
-                ))}
-              </ValidatedField>
-              <ValidatedField
-                id="appointment-user"
-                name="user"
-                data-cy="user"
-                label={translate('simpleBookingSystemApp.appointment.user')}
-                type="select"
-                required
-              >
-                <option value="" key="0" />
-                {users
-                  ? users.map(otherEntity => (
-                      <option value={otherEntity.id} key={otherEntity.id}>
-                        {otherEntity.login}
+                <ValidatedField
+                  label={translate('simpleBookingSystemApp.appointment.endTime')}
+                  id="appointment-endTime"
+                  name="endTime"
+                  data-cy="endTime"
+                  type="datetime-local"
+                  placeholder="YYYY-MM-DD HH:mm"
+                  validate={{
+                    required: { value: true, message: translate('entity.validation.required') },
+                  }}
+                />
+                {!isNew && (
+                  <ValidatedField
+                    label={translate('simpleBookingSystemApp.appointment.status')}
+                    id="appointment-status"
+                    name="status"
+                    data-cy="status"
+                    type="select"
+                  >
+                    {appointmentStatusValues.map(appointmentStatus => (
+                      <option value={appointmentStatus} key={appointmentStatus}>
+                        {translate(`simpleBookingSystemApp.AppointmentStatus.${appointmentStatus}`)}
                       </option>
-                    ))
-                  : null}
-              </ValidatedField>
-              <FormText>
-                <Translate contentKey="entity.validation.required">This field is required.</Translate>
-              </FormText>
-              <ValidatedField
-                id="appointment-service"
-                name="service"
-                data-cy="service"
-                label={translate('simpleBookingSystemApp.appointment.service')}
-                type="select"
-              >
-                <option value="" key="0" />
-                {services
-                  ? services.map(otherEntity => (
-                      <option value={otherEntity.id} key={otherEntity.id}>
-                        {otherEntity.name}
-                      </option>
-                    ))
-                  : null}
-              </ValidatedField>
-              <Button tag={Link} id="cancel-save" data-cy="entityCreateCancelButton" to="/appointment" replace color="info">
-                <FontAwesomeIcon icon="arrow-left" />
+                    ))}
+                  </ValidatedField>
+                )}
+                {isNew && (
+                  <Alert color="info">
+                    <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
+                    <span className="ms-1">- Your booking will require admin approval before being confirmed.</span>
+                  </Alert>
+                )}
+                <ValidatedField
+                  id="appointment-user"
+                  name="user"
+                  data-cy="user"
+                  label={translate('simpleBookingSystemApp.appointment.user')}
+                  type="select"
+                  required
+                >
+                  <option value="" key="0" />
+                  {users
+                    ? users.map(otherEntity => (
+                        <option value={otherEntity.id} key={otherEntity.id}>
+                          {otherEntity.login}
+                        </option>
+                      ))
+                    : null}
+                </ValidatedField>
+                <FormText>
+                  <Translate contentKey="entity.validation.required">This field is required.</Translate>
+                </FormText>
+                <ValidatedField
+                  id="appointment-service"
+                  name="service"
+                  data-cy="service"
+                  label={translate('simpleBookingSystemApp.appointment.service')}
+                  type="select"
+                >
+                  <option value="" key="0" />
+                  {services
+                    ? services.map(otherEntity => (
+                        <option value={otherEntity.id} key={otherEntity.id}>
+                          {otherEntity.name}
+                        </option>
+                      ))
+                    : null}
+                </ValidatedField>
+                <Button tag={Link} id="cancel-save" data-cy="entityCreateCancelButton" to="/appointment" replace color="info">
+                  <FontAwesomeIcon icon="arrow-left" />
+                  &nbsp;
+                  <span className="d-none d-md-inline">
+                    <Translate contentKey="entity.action.back">Back</Translate>
+                  </span>
+                </Button>
                 &nbsp;
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.back">Back</Translate>
-                </span>
-              </Button>
-              &nbsp;
-              <Button color="primary" id="save-entity" data-cy="entityCreateSaveButton" type="submit" disabled={updating}>
-                <FontAwesomeIcon icon="save" />
-                &nbsp;
-                <Translate contentKey="entity.action.save">Save</Translate>
-              </Button>
-            </ValidatedForm>
+                <Button color="primary" id="save-entity" data-cy="entityCreateSaveButton" type="submit" disabled={updating}>
+                  <FontAwesomeIcon icon="save" />
+                  &nbsp;
+                  <Translate contentKey="entity.action.save">Save</Translate>
+                </Button>
+              </ValidatedForm>
+            </>
           )}
         </Col>
       </Row>

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button, Table, ButtonGroup, ButtonToolbar } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSort, faSortDown, faSortUp, faCheck, faTimes, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { faSort, faSortDown, faSortUp, faCheck, faTimes, faFilter, faClock } from '@fortawesome/free-solid-svg-icons';
 import { APP_DATE_FORMAT } from 'app/config/constants';
 import { ASC, DESC, ITEMS_PER_PAGE, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
@@ -196,6 +196,24 @@ export const Appointment = () => {
                   <td>{appointment.endTime ? <TextFormat type="date" value={appointment.endTime} format={APP_DATE_FORMAT} /> : null}</td>
                   <td>
                     <Translate contentKey={`simpleBookingSystemApp.AppointmentStatus.${appointment.status}`} />
+                    {appointment.status === 'REQUESTED' && (
+                      <span className="badge bg-warning ms-2">
+                        <FontAwesomeIcon icon={faClock} className="me-1" />
+                        <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
+                      </span>
+                    )}
+                    {appointment.status === 'SCHEDULED' && (
+                      <span className="badge bg-success ms-2">
+                        <FontAwesomeIcon icon={faCheck} className="me-1" />
+                        <Translate contentKey="simpleBookingSystemApp.appointment.approved">Approved</Translate>
+                      </span>
+                    )}
+                    {appointment.status === 'CANCELLED' && (
+                      <span className="badge bg-danger ms-2">
+                        <FontAwesomeIcon icon={faTimes} className="me-1" />
+                        <Translate contentKey="simpleBookingSystemApp.appointment.cancelled">Cancelled</Translate>
+                      </span>
+                    )}
                   </td>
                   <td>{appointment.user ? appointment.user.login : ''}</td>
                   <td>{appointment.service ? <Link to={`/service/${appointment.service.id}`}>{appointment.service.name}</Link> : ''}</td>

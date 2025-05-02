@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Button, Col, Row } from 'reactstrap';
+import { Button, Col, Row, Badge } from 'reactstrap';
 import { TextFormat, Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTimes, faClock } from '@fortawesome/free-solid-svg-icons';
 
 import { APP_DATE_FORMAT } from 'app/config/constants';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
@@ -77,7 +77,27 @@ export const AppointmentDetail = () => {
               <Translate contentKey="simpleBookingSystemApp.appointment.status">Status</Translate>
             </span>
           </dt>
-          <dd>{appointmentEntity.status}</dd>
+          <dd>
+            <Translate contentKey={`simpleBookingSystemApp.AppointmentStatus.${appointmentEntity.status}`} />
+            {appointmentEntity.status === 'REQUESTED' && (
+              <Badge color="warning" className="ms-2">
+                <FontAwesomeIcon icon={faClock} className="me-1" />
+                <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
+              </Badge>
+            )}
+            {appointmentEntity.status === 'SCHEDULED' && (
+              <Badge color="success" className="ms-2">
+                <FontAwesomeIcon icon={faCheck} className="me-1" />
+                <Translate contentKey="simpleBookingSystemApp.appointment.approved">Approved</Translate>
+              </Badge>
+            )}
+            {appointmentEntity.status === 'CANCELLED' && (
+              <Badge color="danger" className="ms-2">
+                <FontAwesomeIcon icon={faTimes} className="me-1" />
+                <Translate contentKey="simpleBookingSystemApp.appointment.cancelled">Cancelled</Translate>
+              </Badge>
+            )}
+          </dd>
           <dt>
             <Translate contentKey="simpleBookingSystemApp.appointment.user">User</Translate>
           </dt>

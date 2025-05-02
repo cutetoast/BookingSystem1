@@ -6,10 +6,12 @@
 
 **Business Logic**:
 - Bookings should not overlap.
-- A confirmation email should be sent to the customer *only* after admin approval.
+- A confirmation email should be sent to the customer only after admin approval.
 - Cancellations should be allowed up to 24 hours before the appointment time.
 - Booking requests must be approved by an admin before they are confirmed.
 - The admin appointment list page should include an approval status column. The default status should be "Pending" and change to "Approved" after admin approval.
+- A user can make a maximum of 3 bookings per day.
+- The system should not allow selecting a past date/time for a new booking.
 
 **Acceptance Criteria**:
 1. Users can view available time slots for a given service.
@@ -18,7 +20,9 @@
 4. The system prevents double-booking of time slots.
 5. The system handles invalid input gracefully.
 6. Users can cancel appointments up to 24 hours in advance.
-7. The admin appointment list displays the approval status of each booking request.
+7. The admin appointment list displays the approval status of each booking request (Pending/Approved).
+8. The system prevents users from booking more than 3 appointments per day.
+
 
 **Functional Requirements**:
 - View available time slots.

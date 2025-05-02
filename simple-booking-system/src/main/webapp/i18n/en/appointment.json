@@ -22,7 +22,12 @@
       "endTime": "End Time",
       "status": "Status",
       "user": "User",
-      "service": "Service"
+      "service": "Service",
+      "pendingApproval": "Pending Approval",
+      "approved": "Approved",
+      "cancelled": "Cancelled",
+      "maxBookingsError": "You have reached the maximum limit of 3 bookings per day.",
+      "overlappingBookingError": "You already have an appointment in this time slot."
     }
   }
 }
