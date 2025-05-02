@@ -57,7 +57,9 @@ public class AppointmentService {
         LOG.debug("Request to save Appointment : {}", appointmentDTO);
         Appointment appointment = appointmentMapper.toEntity(appointmentDTO);
         // Set status to REQUESTED by default for new appointments
-        appointment.setStatus(AppointmentStatus.REQUESTED);
+        if (appointment.getId() == null) {
+            appointment.setStatus(AppointmentStatus.REQUESTED);
+        }
         
         // Validate that the booking is not in the past
         if (appointment.getStartTime() != null && appointment.getStartTime().isBefore(Instant.now())) {
@@ -198,30 +200,28 @@ public class AppointmentService {
      * Approve an appointment request.
      *
      * @param id the id of the appointment to approve.
-     * @return the persisted entity.
+     * @return the updated appointment
      */
     @Transactional
     public Optional<AppointmentDTO> approveAppointment(Long id) {
         LOG.debug("Request to approve Appointment : {}", id);
         
         return appointmentRepository.findById(id)
+            .filter(appointment -> appointment.getStatus() == AppointmentStatus.REQUESTED)
             .map(appointment -> {
-                LOG.info("Found appointment: {}, current status: {}", id, appointment.getStatus());
-                if (appointment.getStatus() == AppointmentStatus.REQUESTED) {
-                    LOG.info("Updating appointment status from REQUESTED to SCHEDULED");
-                    appointment.setStatus(AppointmentStatus.SCHEDULED);
-                    appointment = appointmentRepository.save(appointment);
-                    
-                    // Send confirmation email to user
-                    User user = appointment.getUser();
-                    AppointmentDTO appointmentDTO = appointmentMapper.toDto(appointment);
-                    mailService.sendAppointmentConfirmationEmail(user, appointmentDTO);
-                    
-                    return appointmentDTO;
-                } else {
-                    LOG.warn("Cannot approve appointment with status: {}", appointment.getStatus());
-                    return appointmentMapper.toDto(appointment);
+                appointment.setStatus(AppointmentStatus.SCHEDULED);
+                Appointment savedAppointment = appointmentRepository.save(appointment);
+                AppointmentDTO appointmentDTO = appointmentMapper.toDto(savedAppointment);
+                
+                // Send confirmation email to user after approval
+                if (appointment.getUser() != null) {
+                    User user = userRepository.findById(appointment.getUser().getId()).orElse(null);
+                    if (user != null) {
+                        mailService.sendAppointmentConfirmationEmail(user, appointmentDTO);
+                    }
                 }
+                
+                return appointmentMapper.toDto(savedAppointment);
             });
     }
 

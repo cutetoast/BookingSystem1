@@ -15,7 +15,7 @@ import {
 } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSort, faSortDown, faSortUp, faCheck, faTimes, faFilter, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faSort, faSortDown, faSortUp, faCheck, faTimes, faFilter, faClock, faHistory } from '@fortawesome/free-solid-svg-icons';
 import { APP_DATE_FORMAT } from 'app/config/constants';
 import { ASC, DESC, ITEMS_PER_PAGE, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
@@ -175,6 +175,9 @@ export const Appointment = () => {
     }
   };
 
+  // Check if the user has admin authority
+  const isAdmin = hasAnyAuthority(account.authorities, [AUTHORITIES.ADMIN]);
+
   return (
     <div>
       <h2 id="appointment-heading" data-cy="AppointmentHeading">
@@ -198,30 +201,25 @@ export const Appointment = () => {
               </DropdownMenu>
             </Dropdown>
 
-            <Button onClick={handleSyncList} color="info" className="me-2">
-              <FontAwesomeIcon icon="sync" />{' '}
+            <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
+              <FontAwesomeIcon icon="sync" spin={loading} />{' '}
               <Translate contentKey="simpleBookingSystemApp.appointment.home.refreshListLabel">Refresh List</Translate>
             </Button>
-
-            <Button tag={Link} to="/appointment/history" color="secondary" className="me-2">
-              <FontAwesomeIcon icon="history" />{' '}
-              <Translate contentKey="simpleBookingSystemApp.appointment.history">View Booking History</Translate>
-            </Button>
-
-            <Link to="/appointment/new" className="btn btn-primary ms-auto" id="jh-create-entity" data-cy="entityCreateButton">
+            <Link to="/appointment/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
               <FontAwesomeIcon icon="plus" />
               &nbsp;
               <Translate contentKey="simpleBookingSystemApp.appointment.home.createLabel">Create new Appointment</Translate>
+            </Link>
+            <Link to="/appointment/history" className="btn btn-secondary ms-2" id="history-button">
+              <FontAwesomeIcon icon={faHistory} />
+              &nbsp;
+              <Translate contentKey="simpleBookingSystemApp.appointment.history.viewHistory">View History</Translate>
             </Link>
           </div>
         </Col>
       </Row>
 
-      {errorMessage && (
-        <div className="alert alert-danger" role="alert">
-          {errorMessage}
-        </div>
-      )}
+      {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
 
       <div className="table-responsive">
         {filteredAppointments && filteredAppointments.length > 0 ? (
@@ -245,12 +243,14 @@ export const Appointment = () => {
                   <FontAwesomeIcon icon={getSortIconByFieldName('status')} />
                 </th>
                 <th>
-                  <Translate contentKey="simpleBookingSystemApp.appointment.user">User</Translate> <FontAwesomeIcon icon="sort" />
+                  <Translate contentKey="simpleBookingSystemApp.appointment.user">User</Translate>
                 </th>
                 <th>
-                  <Translate contentKey="simpleBookingSystemApp.appointment.service">Service</Translate> <FontAwesomeIcon icon="sort" />
+                  <Translate contentKey="simpleBookingSystemApp.appointment.service">Service</Translate>
                 </th>
-                <th />
+                <th className="text-center">
+                  <Translate contentKey="entity.action.actions">Actions</Translate>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -268,7 +268,7 @@ export const Appointment = () => {
                   <td>{getStatusBadge(appointment.status)}</td>
                   <td>{appointment.user ? appointment.user.login : ''}</td>
                   <td>{appointment.service ? <Link to={`/service/${appointment.service.id}`}>{appointment.service.name}</Link> : ''}</td>
-                  <td className="text-end">
+                  <td className="text-center">
                     <div className="btn-group flex-btn-group-container">
                       <Button tag={Link} to={`/appointment/${appointment.id}`} color="info" size="sm" data-cy="entityDetailsButton">
                         <FontAwesomeIcon icon="eye" />{' '}
@@ -283,7 +283,7 @@ export const Appointment = () => {
                         </span>
                       </Button>
                       <Button
-                        onClick={() => (location.href = `/appointment/${appointment.id}/delete`)}
+                        onClick={() => (window.location.href = `/appointment/${appointment.id}/delete`)}
                         color="danger"
                         size="sm"
                         data-cy="entityDeleteButton"
@@ -293,16 +293,16 @@ export const Appointment = () => {
                           <Translate contentKey="entity.action.delete">Delete</Translate>
                         </span>
                       </Button>
-                      {hasAnyAuthority([AUTHORITIES.ADMIN], account.authorities) && appointment.status === 'REQUESTED' && (
+                      {isAdmin && appointment.status === 'REQUESTED' && (
                         <>
-                          <Button onClick={() => handleApprove(appointment.id)} color="success" size="sm" data-cy="entityApproveButton">
-                            <FontAwesomeIcon icon={faCheck} />{' '}
+                          <Button onClick={() => handleApprove(appointment.id)} color="success" size="sm">
+                            <FontAwesomeIcon icon="check" />{' '}
                             <span className="d-none d-md-inline">
                               <Translate contentKey="entity.action.approve">Approve</Translate>
                             </span>
                           </Button>
-                          <Button onClick={() => handleReject(appointment.id)} color="danger" size="sm" data-cy="entityRejectButton">
-                            <FontAwesomeIcon icon={faTimes} />{' '}
+                          <Button onClick={() => handleReject(appointment.id)} color="danger" size="sm">
+                            <FontAwesomeIcon icon="times" />{' '}
                             <span className="d-none d-md-inline">
                               <Translate contentKey="entity.action.reject">Reject</Translate>
                             </span>
@@ -323,6 +323,7 @@ export const Appointment = () => {
           )
         )}
       </div>
+
       {totalItems ? (
         <div className={filteredAppointments && filteredAppointments.length > 0 ? '' : 'd-none'}>
           <div className="justify-content-center d-flex">

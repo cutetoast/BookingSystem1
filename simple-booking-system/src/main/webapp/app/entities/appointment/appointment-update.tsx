@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Col, FormText, Row, Alert } from 'reactstrap';
+import { Button, Col, FormText, Row, Alert, Badge } from 'reactstrap';
 import { Translate, ValidatedField, ValidatedForm, translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -16,6 +16,7 @@ export const AppointmentUpdate = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
+  const [creationSuccess, setCreationSuccess] = useState(false);
 
   const { id } = useParams<'id'>();
   const isNew = id === undefined;
@@ -45,7 +46,14 @@ export const AppointmentUpdate = () => {
 
   useEffect(() => {
     if (updateSuccess) {
-      handleClose();
+      if (isNew) {
+        setCreationSuccess(true);
+        setTimeout(() => {
+          handleClose();
+        }, 5000);
+      } else {
+        handleClose();
+      }
     }
   }, [updateSuccess]);
 
@@ -117,6 +125,26 @@ export const AppointmentUpdate = () => {
         </Col>
       </Row>
       <Row className="justify-content-center">
+        {creationSuccess && (
+          <Col md="8">
+            <Alert color="success">
+              <Translate contentKey="simpleBookingSystemApp.appointment.created">
+                A new Appointment request has been submitted and is pending approval
+              </Translate>
+              <p className="mt-2">
+                <Translate contentKey="simpleBookingSystemApp.appointment.approvalMessage">
+                  Your booking will be confirmed after admin approval. You will receive a confirmation email once approved.
+                </Translate>
+              </p>
+              <p className="mt-2">
+                <Badge color="warning" className="px-3 py-2">
+                  <FontAwesomeIcon icon="clock" className="me-1" />
+                  <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
+                </Badge>
+              </p>
+            </Alert>
+          </Col>
+        )}
         <Col md="8">
           {loading ? (
             <p>Loading...</p>
@@ -188,9 +216,18 @@ export const AppointmentUpdate = () => {
                   </ValidatedField>
                 )}
                 {isNew && (
-                  <Alert color="info">
-                    <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
-                    <span className="ms-1">- Your booking will require admin approval before being confirmed.</span>
+                  <Alert color="info" className="mt-3">
+                    <p>
+                      <FontAwesomeIcon icon="info-circle" className="me-1" />
+                      <Translate contentKey="simpleBookingSystemApp.appointment.approvalMessage">
+                        Your booking will be confirmed after admin approval. You will receive a confirmation email once approved.
+                      </Translate>
+                    </p>
+                    <p className="mb-0">
+                      <Translate contentKey="simpleBookingSystemApp.appointment.cancellationPolicy">
+                        Cancellations are only allowed up to 24 hours before your scheduled appointment.
+                      </Translate>
+                    </p>
                   </Alert>
                 )}
                 <ValidatedField

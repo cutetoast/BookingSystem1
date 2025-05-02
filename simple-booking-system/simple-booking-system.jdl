@@ -22,13 +22,4 @@ Appointment{service(name)} to Service
 service Appointment, Service with serviceClass
 paginate Appointment, Service with pagination
 dto Appointment, Service with mapstruct
-**Explanation (reiterated):**
-The updated user story adds significant detail regarding business rules, UI/UX, and functional/non-functional requirements.  However, *none of these updates necessitate changes to the JDL*.
-The JDL defines the *data model*.  Concepts like "preventing overlapping bookings", "24-hour cancellation policy", "email confirmations", "admin approval workflow", "booking limits", and "UI design" are all implemented in the *application logic* (Java/TypeScript services, controllers, UI components), *not* in the JDL.
-The existing JDL already provides the necessary structure:
-* **`Appointment` entity:** Stores appointment details (start/end times, status).
-* **`Service` entity:**  Represents the service being booked.
-* **`AppointmentStatus` enum:** Defines the possible states of an appointment.
-* **Relationships:** Links appointments to users and services.
-The new requirements will be implemented in the service layer (e.g., checking for overlapping bookings before creating a new appointment, enforcing cancellation rules, sending emails) and the UI (e.g., displaying available time slots, handling user input, presenting confirmation messages).
-Therefore, the JDL remains unchanged.  The focus of the implementation effort should be on building the application logic and UI features described in the updated user story, using the existing data model defined by the JDL.
+**Explanation (reiterated):**  The extensive updates to the user story describe business rules, UI/UX, and functional/non-functional requirements that are *outside the scope of the JDL*.  The JDL defines the *data model*, not the application logic.  Concepts like preventing overlapping bookings, cancellation policies, email confirmations, admin approval workflows, booking limits, and UI design are all implemented in the application code (Java/TypeScript), not in the JDL.  The provided JDL already contains the necessary data structure.  The implementation effort should focus on building the application logic and UI features described in the updated user story, *using the existing data model defined by this JDL*.  No JDL changes are required.

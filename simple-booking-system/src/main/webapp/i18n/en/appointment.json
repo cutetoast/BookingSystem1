@@ -8,7 +8,7 @@
         "createOrEditLabel": "Create or edit a Appointment",
         "notFound": "No Appointments found"
       },
-      "created": "A new Appointment is created with identifier {{ param }}",
+      "created": "A new Appointment request has been submitted and is pending approval",
       "updated": "A Appointment is updated with identifier {{ param }}",
       "deleted": "A Appointment is deleted with identifier {{ param }}",
       "delete": {
@@ -19,7 +19,8 @@
       },
       "history": {
         "title": "Booking History",
-        "description": "View your past appointments"
+        "description": "View your past appointments",
+        "viewHistory": "View History"
       },
       "id": "ID",
       "startTime": "Start Time",
@@ -33,7 +34,11 @@
       "completed": "Completed",
       "maxBookingsError": "You have reached the maximum limit of 3 bookings per day.",
       "overlappingBookingError": "You already have an appointment in this time slot.",
-      "history": "View Booking History"
+      "approvalMessage": "Your booking will be confirmed after admin approval. You will receive a confirmation email once approved.",
+      "pastDateError": "Cannot book appointments in the past. Please select a future date.",
+      "cancellationPolicy": "Cancellations are only allowed up to 24 hours before your scheduled appointment.",
+      "approved": "Booking approved",
+      "rejected": "Booking rejected"
     }
   }
 }

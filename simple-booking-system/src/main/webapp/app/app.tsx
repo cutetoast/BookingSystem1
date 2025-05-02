@@ -2,10 +2,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import './app.scss';
 import 'app/config/dayjs';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from 'reactstrap';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import LoadingBar from 'react-redux-loading-bar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
 
 import { useAppDispatch, useAppSelector } from 'app/config/store';
 import { getSession } from 'app/shared/reducers/authentication';
@@ -34,11 +37,34 @@ export const App = () => {
   const isInProduction = useAppSelector(state => state.applicationProfile.inProduction);
   const isOpenAPIEnabled = useAppSelector(state => state.applicationProfile.isOpenAPIEnabled);
 
+  // Theme switcher implementation
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Initialize from localStorage, default to light mode
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme === 'dark';
+  });
+
+  useEffect(() => {
+    // Apply theme to document body
+    if (isDarkMode) {
+      document.body.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-theme');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   const paddingTop = '60px';
   return (
     <BrowserRouter basename={baseHref}>
       <div className="app-container" style={{ paddingTop }}>
         <ToastContainer position="top-left" className="toastify-container" toastClassName="toastify-toast" />
+        <LoadingBar className="loading-bar" />
         <ErrorBoundary>
           <Header
             isAuthenticated={isAuthenticated}
@@ -50,6 +76,12 @@ export const App = () => {
           />
         </ErrorBoundary>
         <div className="container-fluid view-container" id="app-view-container">
+          <div className="theme-toggle-wrapper">
+            <button onClick={toggleTheme} className="btn btn-sm theme-toggle">
+              <FontAwesomeIcon icon={isDarkMode ? faSun : faMoon} />
+              {isDarkMode ? ' Light Mode' : ' Dark Mode'}
+            </button>
+          </div>
           <Card className="jh-card">
             <ErrorBoundary>
               <AppRoutes />

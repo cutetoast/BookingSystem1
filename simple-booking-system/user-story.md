@@ -36,6 +36,7 @@
 - Admin can approve or reject booking requests.
 - Admin can view the list of appointments with their approval status.
 - User can view past booking history.
+-Support light and dark themes.
 
 **Non-Functional Requirements**:
 - The system should be user-friendly and easy to navigate.
@@ -50,3 +51,4 @@
 - A user account section to manage bookings.
 - An admin panel to manage appointment requests and their approval status.
 - Responsive design for various screen sizes.
+-Theme switcher (light/dark mode).
