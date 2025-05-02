@@ -12,6 +12,7 @@
 - The admin appointment list page should include an approval status column. The default status should be "Pending" and change to "Approved" after admin approval.
 - A user can make a maximum of 3 bookings per day.
 - The system should not allow selecting a past date/time for a new booking.
+- Users can view their past booking history.
 
 **Acceptance Criteria**:
 1. Users can view available time slots for a given service.
@@ -22,6 +23,7 @@
 6. Users can cancel appointments up to 24 hours in advance.
 7. The admin appointment list displays the approval status of each booking request (Pending/Approved).
 8. The system prevents users from booking more than 3 appointments per day.
+9. Users can view their past booking history.
 
 
 **Functional Requirements**:
@@ -33,6 +35,7 @@
 - Search for available appointments based on criteria (e.g., date, service).
 - Admin can approve or reject booking requests.
 - Admin can view the list of appointments with their approval status.
+- User can view past booking history.
 
 **Non-Functional Requirements**:
 - The system should be user-friendly and easy to navigate.

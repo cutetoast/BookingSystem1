@@ -203,6 +203,11 @@ export const Appointment = () => {
               <Translate contentKey="simpleBookingSystemApp.appointment.home.refreshListLabel">Refresh List</Translate>
             </Button>
 
+            <Button tag={Link} to="/appointment/history" color="secondary" className="me-2">
+              <FontAwesomeIcon icon="history" />{' '}
+              <Translate contentKey="simpleBookingSystemApp.appointment.history">View Booking History</Translate>
+            </Button>
+
             <Link to="/appointment/new" className="btn btn-primary ms-auto" id="jh-create-entity" data-cy="entityCreateButton">
               <FontAwesomeIcon icon="plus" />
               &nbsp;

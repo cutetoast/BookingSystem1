@@ -255,4 +255,17 @@ public class AppointmentService {
                 }
             });
     }
+
+    /**
+     * Get past appointments for the current user.
+     *
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    @Transactional(readOnly = true)
+    public Page<AppointmentDTO> findPastAppointmentsForCurrentUser(Pageable pageable) {
+        LOG.debug("Request to get past appointments for current user");
+        return appointmentRepository.findPastAppointmentsForCurrentUser(pageable)
+            .map(appointmentMapper::toDto);
+    }
 }

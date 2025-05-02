@@ -17,6 +17,10 @@
       "detail": {
         "title": "Appointment"
       },
+      "history": {
+        "title": "Booking History",
+        "description": "View your past appointments"
+      },
       "id": "ID",
       "startTime": "Start Time",
       "endTime": "End Time",
@@ -26,8 +30,10 @@
       "pendingApproval": "Pending Approval",
       "approved": "Approved",
       "cancelled": "Cancelled",
+      "completed": "Completed",
       "maxBookingsError": "You have reached the maximum limit of 3 bookings per day.",
-      "overlappingBookingError": "You already have an appointment in this time slot."
+      "overlappingBookingError": "You already have an appointment in this time slot.",
+      "history": "View Booking History"
     }
   }
 }

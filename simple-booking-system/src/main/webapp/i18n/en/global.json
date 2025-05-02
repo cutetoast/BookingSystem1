@@ -9,6 +9,7 @@
         "main": "Entities",
         "jhipster-needle-menu-add-entry": "JHipster will add additional entities here (do not translate!)",
         "appointment": "Appointment",
+        "appointmentHistory": "Booking History",
         "service": "Service"
       },
       "account": {

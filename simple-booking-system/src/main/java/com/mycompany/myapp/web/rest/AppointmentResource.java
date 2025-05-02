@@ -282,9 +282,9 @@ public class AppointmentResource {
     @PreAuthorize("permitAll()")
     public ResponseEntity<Void> rejectAppointmentTest(@PathVariable("id") Long id) {
         LOG.info("REST request to test reject Appointment : {}", id);
-        
+         
         Optional<AppointmentDTO> result = appointmentService.rejectAppointment(id);
-        
+         
         if (result.isPresent()) {
             LOG.info("Test: Successfully rejected appointment: {}", result.get());
             // Redirect to the appointments page
@@ -298,5 +298,21 @@ public class AppointmentResource {
             headers.add("Location", "/appointment");
             return ResponseEntity.status(302).headers(headers).build();
         }
+    }
+
+    /**
+     * {@code GET  /appointments/history} : get past appointments for the current user.
+     *
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of appointments in body.
+     */
+    @GetMapping("/history")
+    public ResponseEntity<List<AppointmentDTO>> getPastAppointments(
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        LOG.debug("REST request to get past appointments for current user");
+        Page<AppointmentDTO> page = appointmentService.findPastAppointmentsForCurrentUser(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 }

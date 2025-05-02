@@ -54,4 +54,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
      */
     @Query("select count(a) from Appointment a where a.user.id = :userId and a.status in ('REQUESTED', 'SCHEDULED') and function('date', a.startTime) = function('date', :date)")
     Long countAppointmentsForUserOnDay(@Param("userId") Long userId, @Param("date") java.time.Instant date);
+    
+    /**
+     * Find past appointments for the current user.
+     */
+    @Query("select a from Appointment a left join fetch a.service where a.user.login = ?#{authentication.name} and a.endTime < CURRENT_TIMESTAMP order by a.startTime desc")
+    Page<Appointment> findPastAppointmentsForCurrentUser(Pageable pageable);
 }

@@ -27,6 +27,15 @@ export const getEntities = createAsyncThunk(
   { serializeError: serializeAxiosError },
 );
 
+export const getPastAppointments = createAsyncThunk(
+  'appointment/fetch_past_appointments',
+  async ({ page, size, sort }: IQueryParams) => {
+    const requestUrl = `${apiUrl}/history?${sort ? `page=${page}&size=${size}&sort=${sort}&` : ''}cacheBuster=${new Date().getTime()}`;
+    return axios.get<IAppointment[]>(requestUrl);
+  },
+  { serializeError: serializeAxiosError },
+);
+
 export const getEntity = createAsyncThunk(
   'appointment/fetch_entity',
   async (id: string | number) => {
@@ -160,6 +169,16 @@ export const AppointmentSlice = createEntitySlice({
         state.entity = action.payload.data;
       })
       .addMatcher(isFulfilled(getEntities), (state, action) => {
+        const { data, headers } = action.payload;
+
+        return {
+          ...state,
+          loading: false,
+          entities: data,
+          totalItems: parseInt(headers['x-total-count'], 10),
+        };
+      })
+      .addMatcher(isFulfilled(getPastAppointments), (state, action) => {
         const { data, headers } = action.payload;
 
         return {
