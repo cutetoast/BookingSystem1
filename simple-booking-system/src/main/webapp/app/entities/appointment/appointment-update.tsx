@@ -147,6 +147,12 @@ export const AppointmentUpdate = () => {
                   placeholder="YYYY-MM-DD HH:mm"
                   validate={{
                     required: { value: true, message: translate('entity.validation.required') },
+                    validate(value) {
+                      if (isNew && new Date(value) < new Date()) {
+                        return 'Cannot schedule appointments in the past';
+                      }
+                      return true;
+                    },
                   }}
                 />
                 <ValidatedField
@@ -158,6 +164,12 @@ export const AppointmentUpdate = () => {
                   placeholder="YYYY-MM-DD HH:mm"
                   validate={{
                     required: { value: true, message: translate('entity.validation.required') },
+                    validate(value) {
+                      if (isNew && new Date(value) < new Date()) {
+                        return 'Cannot schedule appointments in the past';
+                      }
+                      return true;
+                    },
                   }}
                 />
                 {!isNew && (

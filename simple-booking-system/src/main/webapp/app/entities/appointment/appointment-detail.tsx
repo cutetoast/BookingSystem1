@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Button, Col, Row, Badge } from 'reactstrap';
+import { Link, useParams } from 'react-router-dom';
+import { Button, Col, Row, Badge, Alert, Card, CardHeader, CardBody } from 'reactstrap';
 import { TextFormat, Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTimes, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTimes, faClock, faInfo } from '@fortawesome/free-solid-svg-icons';
 
 import { APP_DATE_FORMAT } from 'app/config/constants';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
@@ -14,7 +14,6 @@ import { getEntity, approveAppointment, rejectAppointment } from './appointment.
 
 export const AppointmentDetail = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   const { id } = useParams<'id'>();
   const updating = useAppSelector(state => state.appointment.updating);
@@ -37,109 +36,163 @@ export const AppointmentDetail = () => {
 
   const handleReject = () => {
     dispatch(rejectAppointment(id));
-    navigate('/appointment');
   };
 
   const userAuthorities = useAppSelector(state => state.authentication.account.authorities);
 
   const appointmentEntity = useAppSelector(state => state.appointment.entity);
+
+  // Calculate if we're within 24 hours of the appointment start time
+  const isWithin24Hours = appointmentEntity.startTime
+    ? new Date(appointmentEntity.startTime).getTime() - new Date().getTime() < 24 * 60 * 60 * 1000
+    : false;
+
+  // Helper function for status badges
+  const getStatusBadge = status => {
+    switch (status) {
+      case 'REQUESTED':
+        return (
+          <Badge color="warning" className="p-2">
+            <FontAwesomeIcon icon={faClock} className="me-1" />
+            <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
+          </Badge>
+        );
+      case 'SCHEDULED':
+        return (
+          <Badge color="success" className="p-2">
+            <FontAwesomeIcon icon={faCheck} className="me-1" />
+            <Translate contentKey="simpleBookingSystemApp.appointment.approved">Approved</Translate>
+          </Badge>
+        );
+      case 'CANCELLED':
+        return (
+          <Badge color="danger" className="p-2">
+            <FontAwesomeIcon icon={faTimes} className="me-1" />
+            <Translate contentKey="simpleBookingSystemApp.appointment.cancelled">Cancelled</Translate>
+          </Badge>
+        );
+      case 'COMPLETED':
+        return (
+          <Badge color="info" className="p-2">
+            <FontAwesomeIcon icon={faCheck} className="me-1" />
+            <Translate contentKey="simpleBookingSystemApp.appointment.completed">Completed</Translate>
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <Row>
-      <Col md="8">
-        <h2 data-cy="appointmentDetailsHeading">
-          <Translate contentKey="simpleBookingSystemApp.appointment.detail.title">Appointment</Translate>
-        </h2>
-        <dl className="jh-entity-details">
-          <dt>
-            <span id="id">
-              <Translate contentKey="global.field.id">ID</Translate>
-            </span>
-          </dt>
-          <dd>{appointmentEntity.id}</dd>
-          <dt>
-            <span id="startTime">
-              <Translate contentKey="simpleBookingSystemApp.appointment.startTime">Start Time</Translate>
-            </span>
-          </dt>
-          <dd>
-            {appointmentEntity.startTime ? <TextFormat value={appointmentEntity.startTime} type="date" format={APP_DATE_FORMAT} /> : null}
-          </dd>
-          <dt>
-            <span id="endTime">
-              <Translate contentKey="simpleBookingSystemApp.appointment.endTime">End Time</Translate>
-            </span>
-          </dt>
-          <dd>
-            {appointmentEntity.endTime ? <TextFormat value={appointmentEntity.endTime} type="date" format={APP_DATE_FORMAT} /> : null}
-          </dd>
-          <dt>
-            <span id="status">
-              <Translate contentKey="simpleBookingSystemApp.appointment.status">Status</Translate>
-            </span>
-          </dt>
-          <dd>
-            <Translate contentKey={`simpleBookingSystemApp.AppointmentStatus.${appointmentEntity.status}`} />
-            {appointmentEntity.status === 'REQUESTED' && (
-              <Badge color="warning" className="ms-2">
-                <FontAwesomeIcon icon={faClock} className="me-1" />
-                <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
-              </Badge>
-            )}
-            {appointmentEntity.status === 'SCHEDULED' && (
-              <Badge color="success" className="ms-2">
-                <FontAwesomeIcon icon={faCheck} className="me-1" />
-                <Translate contentKey="simpleBookingSystemApp.appointment.approved">Approved</Translate>
-              </Badge>
-            )}
-            {appointmentEntity.status === 'CANCELLED' && (
-              <Badge color="danger" className="ms-2">
-                <FontAwesomeIcon icon={faTimes} className="me-1" />
-                <Translate contentKey="simpleBookingSystemApp.appointment.cancelled">Cancelled</Translate>
-              </Badge>
-            )}
-          </dd>
-          <dt>
-            <Translate contentKey="simpleBookingSystemApp.appointment.user">User</Translate>
-          </dt>
-          <dd>{appointmentEntity.user ? appointmentEntity.user.login : ''}</dd>
-          <dt>
-            <Translate contentKey="simpleBookingSystemApp.appointment.service">Service</Translate>
-          </dt>
-          <dd>{appointmentEntity.service ? appointmentEntity.service.name : ''}</dd>
-        </dl>
-        <Button tag={Link} to="/appointment" replace color="info" data-cy="entityDetailsBackButton">
-          <FontAwesomeIcon icon="arrow-left" />{' '}
-          <span className="d-none d-md-inline">
-            <Translate contentKey="entity.action.back">Back</Translate>
-          </span>
-        </Button>
-        &nbsp;
-        {hasAnyAuthority([AUTHORITIES.ADMIN], userAuthorities) && appointmentEntity.status === 'REQUESTED' && (
-          <>
-            <Button onClick={handleApprove} color="success" data-cy="entityApproveButton">
-              <FontAwesomeIcon icon={faCheck} />{' '}
-              <span className="d-none d-md-inline">
-                <Translate contentKey="entity.action.approve">Approve</Translate>
+    <div>
+      <Row className="justify-content-center">
+        <Col md="8">
+          <h2 data-cy="appointmentDetailsHeading">
+            <Translate contentKey="simpleBookingSystemApp.appointment.detail.title">Appointment</Translate>
+          </h2>
+          <Card className="mb-4">
+            <CardHeader className="bg-light">
+              <h4 className="mb-0">
+                <Translate contentKey="simpleBookingSystemApp.appointment.detail.subtitle">Appointment Details</Translate>
+              </h4>
+            </CardHeader>
+            <CardBody>
+              <Row className="mb-2">
+                <Col md="4" className="fw-bold">
+                  <Translate contentKey="simpleBookingSystemApp.appointment.id">ID</Translate>
+                </Col>
+                <Col md="8">{appointmentEntity.id}</Col>
+              </Row>
+              <Row className="mb-2">
+                <Col md="4" className="fw-bold">
+                  <Translate contentKey="simpleBookingSystemApp.appointment.startTime">Start Time</Translate>
+                </Col>
+                <Col md="8">
+                  {appointmentEntity.startTime ? (
+                    <TextFormat value={appointmentEntity.startTime} type="date" format={APP_DATE_FORMAT} />
+                  ) : null}
+                </Col>
+              </Row>
+              <Row className="mb-2">
+                <Col md="4" className="fw-bold">
+                  <Translate contentKey="simpleBookingSystemApp.appointment.endTime">End Time</Translate>
+                </Col>
+                <Col md="8">
+                  {appointmentEntity.endTime ? <TextFormat value={appointmentEntity.endTime} type="date" format={APP_DATE_FORMAT} /> : null}
+                </Col>
+              </Row>
+              <Row className="mb-2">
+                <Col md="4" className="fw-bold">
+                  <Translate contentKey="simpleBookingSystemApp.appointment.status">Status</Translate>
+                </Col>
+                <Col md="8">{getStatusBadge(appointmentEntity.status)}</Col>
+              </Row>
+              <Row className="mb-2">
+                <Col md="4" className="fw-bold">
+                  <Translate contentKey="simpleBookingSystemApp.appointment.user">User</Translate>
+                </Col>
+                <Col md="8">{appointmentEntity.user ? appointmentEntity.user.login : ''}</Col>
+              </Row>
+              <Row className="mb-2">
+                <Col md="4" className="fw-bold">
+                  <Translate contentKey="simpleBookingSystemApp.appointment.service">Service</Translate>
+                </Col>
+                <Col md="8">
+                  {appointmentEntity.service ? (
+                    <Link to={`/service/${appointmentEntity.service.id}`}>{appointmentEntity.service.name}</Link>
+                  ) : (
+                    ''
+                  )}
+                </Col>
+              </Row>
+            </CardBody>
+          </Card>
+          {appointmentEntity.status === 'REQUESTED' && (
+            <Alert color="warning">
+              <FontAwesomeIcon icon={faClock} className="me-2" />
+              <span>
+                <Translate contentKey="simpleBookingSystemApp.appointment.pendingApprovalDescription">
+                  This appointment is awaiting admin approval. You will receive an email once it has been approved.
+                </Translate>
               </span>
-            </Button>
-            &nbsp;
-            <Button onClick={handleReject} color="danger" data-cy="entityRejectButton">
-              <FontAwesomeIcon icon={faTimes} />{' '}
-              <span className="d-none d-md-inline">
-                <Translate contentKey="entity.action.reject">Reject</Translate>
+            </Alert>
+          )}
+          {appointmentEntity.status === 'SCHEDULED' && isWithin24Hours && (
+            <Alert color="danger">
+              <FontAwesomeIcon icon={faInfo} className="me-2" />
+              <span>
+                <Translate contentKey="simpleBookingSystemApp.appointment.cancellationPolicy">
+                  This appointment cannot be cancelled as it is scheduled to start within 24 hours.
+                </Translate>
               </span>
-            </Button>
-            &nbsp;
-          </>
-        )}
-        <Button tag={Link} to={`/appointment/${appointmentEntity.id}/edit`} replace color="primary">
-          <FontAwesomeIcon icon="pencil-alt" />{' '}
-          <span className="d-none d-md-inline">
-            <Translate contentKey="entity.action.edit">Edit</Translate>
-          </span>
-        </Button>
-      </Col>
-    </Row>
+            </Alert>
+          )}
+          {appointmentEntity.status === 'SCHEDULED' && !isWithin24Hours && (
+            <Alert color="info">
+              <FontAwesomeIcon icon={faInfo} className="me-2" />
+              <span>
+                <Translate contentKey="simpleBookingSystemApp.appointment.cancellationReminder">
+                  Remember that cancellations are only allowed up to 24 hours before the scheduled appointment time.
+                </Translate>
+              </span>
+            </Alert>
+          )}
+          <Button tag={Link} to="/appointment" replace color="info" data-cy="entityDetailsBackButton">
+            <FontAwesomeIcon icon="arrow-left" />{' '}
+            <span className="d-none d-md-inline">
+              <Translate contentKey="entity.action.back">Back</Translate>
+            </span>
+          </Button>
+          &nbsp;
+          <Button tag={Link} to={`/appointment/${appointmentEntity.id}/edit`} replace color="primary">
+            <FontAwesomeIcon icon="pencil-alt" />{' '}
+            <span className="d-none d-md-inline">
+              <Translate contentKey="entity.action.edit">Edit</Translate>
+            </span>
+          </Button>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

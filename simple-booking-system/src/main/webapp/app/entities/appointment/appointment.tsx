@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button, Table, ButtonGroup, ButtonToolbar } from 'reactstrap';
+import {
+  Button,
+  Table,
+  ButtonGroup,
+  ButtonToolbar,
+  Badge,
+  Row,
+  Col,
+  Dropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem,
+} from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSort, faSortDown, faSortUp, faCheck, faTimes, faFilter, faClock } from '@fortawesome/free-solid-svg-icons';
@@ -16,7 +28,10 @@ import { getEntities, approveAppointment, rejectAppointment } from './appointmen
 export const Appointment = () => {
   const dispatch = useAppDispatch();
   const [errorMessage, setErrorMessage] = useState('');
-  const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const toggleDropdown = () => setDropdownOpen(prevState => !prevState);
 
   const pageLocation = useLocation();
   const navigate = useNavigate();
@@ -118,33 +133,84 @@ export const Appointment = () => {
     }, 1000);
   };
 
-  let displayedAppointments = appointmentList;
-  if (showPendingOnly) {
-    displayedAppointments = appointmentList.filter(appointment => appointment.status === 'REQUESTED');
+  // Filter appointments based on the selected status
+  let filteredAppointments = appointmentList;
+  if (statusFilter !== 'ALL') {
+    filteredAppointments = appointmentList.filter(appointment => appointment.status === statusFilter);
   }
+
+  // Helper function for status badges
+  const getStatusBadge = status => {
+    switch (status) {
+      case 'REQUESTED':
+        return (
+          <Badge color="warning" className="me-1">
+            <FontAwesomeIcon icon={faClock} className="me-1" />
+            <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
+          </Badge>
+        );
+      case 'SCHEDULED':
+        return (
+          <Badge color="success" className="me-1">
+            <FontAwesomeIcon icon={faCheck} className="me-1" />
+            <Translate contentKey="simpleBookingSystemApp.appointment.approved">Approved</Translate>
+          </Badge>
+        );
+      case 'CANCELLED':
+        return (
+          <Badge color="danger" className="me-1">
+            <FontAwesomeIcon icon={faTimes} className="me-1" />
+            <Translate contentKey="simpleBookingSystemApp.appointment.cancelled">Cancelled</Translate>
+          </Badge>
+        );
+      case 'COMPLETED':
+        return (
+          <Badge color="info" className="me-1">
+            <FontAwesomeIcon icon={faCheck} className="me-1" />
+            <Translate contentKey="simpleBookingSystemApp.appointment.completed">Completed</Translate>
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div>
       <h2 id="appointment-heading" data-cy="AppointmentHeading">
         <Translate contentKey="simpleBookingSystemApp.appointment.home.title">Appointments</Translate>
-        <div className="d-flex justify-content-end">
-          {hasAnyAuthority([AUTHORITIES.ADMIN], account.authorities) && (
-            <Button
-              color={showPendingOnly ? 'primary' : 'outline-primary'}
-              onClick={() => setShowPendingOnly(!showPendingOnly)}
-              className="me-2"
-              size="sm"
-            >
-              <FontAwesomeIcon icon={faFilter} /> {showPendingOnly ? 'All Appointments' : 'Pending Only'}
-            </Button>
-          )}
-          <Link to="/appointment/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
-            <FontAwesomeIcon icon="plus" />
-            &nbsp;
-            <Translate contentKey="simpleBookingSystemApp.appointment.home.createLabel">Create new Appointment</Translate>
-          </Link>
-        </div>
       </h2>
+
+      <Row className="mb-3">
+        <Col>
+          <div className="d-flex">
+            <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown} className="me-2">
+              <DropdownToggle color="secondary" caret>
+                <FontAwesomeIcon icon={faFilter} className="me-1" />
+                {statusFilter === 'ALL' ? 'All Statuses' : statusFilter}
+              </DropdownToggle>
+              <DropdownMenu>
+                <DropdownItem onClick={() => setStatusFilter('ALL')}>All Statuses</DropdownItem>
+                <DropdownItem onClick={() => setStatusFilter('REQUESTED')}>Pending Approval</DropdownItem>
+                <DropdownItem onClick={() => setStatusFilter('SCHEDULED')}>Approved</DropdownItem>
+                <DropdownItem onClick={() => setStatusFilter('COMPLETED')}>Completed</DropdownItem>
+                <DropdownItem onClick={() => setStatusFilter('CANCELLED')}>Cancelled</DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+
+            <Button onClick={handleSyncList} color="info" className="me-2">
+              <FontAwesomeIcon icon="sync" />{' '}
+              <Translate contentKey="simpleBookingSystemApp.appointment.home.refreshListLabel">Refresh List</Translate>
+            </Button>
+
+            <Link to="/appointment/new" className="btn btn-primary ms-auto" id="jh-create-entity" data-cy="entityCreateButton">
+              <FontAwesomeIcon icon="plus" />
+              &nbsp;
+              <Translate contentKey="simpleBookingSystemApp.appointment.home.createLabel">Create new Appointment</Translate>
+            </Link>
+          </div>
+        </Col>
+      </Row>
 
       {errorMessage && (
         <div className="alert alert-danger" role="alert">
@@ -153,7 +219,7 @@ export const Appointment = () => {
       )}
 
       <div className="table-responsive">
-        {displayedAppointments && displayedAppointments.length > 0 ? (
+        {filteredAppointments && filteredAppointments.length > 0 ? (
           <Table responsive>
             <thead>
               <tr>
@@ -183,7 +249,7 @@ export const Appointment = () => {
               </tr>
             </thead>
             <tbody>
-              {displayedAppointments.map((appointment, i) => (
+              {filteredAppointments.map((appointment, i) => (
                 <tr key={`entity-${i}`} data-cy="entityTable">
                   <td>
                     <Button tag={Link} to={`/appointment/${appointment.id}`} color="link" size="sm">
@@ -194,27 +260,7 @@ export const Appointment = () => {
                     {appointment.startTime ? <TextFormat type="date" value={appointment.startTime} format={APP_DATE_FORMAT} /> : null}
                   </td>
                   <td>{appointment.endTime ? <TextFormat type="date" value={appointment.endTime} format={APP_DATE_FORMAT} /> : null}</td>
-                  <td>
-                    <Translate contentKey={`simpleBookingSystemApp.AppointmentStatus.${appointment.status}`} />
-                    {appointment.status === 'REQUESTED' && (
-                      <span className="badge bg-warning ms-2">
-                        <FontAwesomeIcon icon={faClock} className="me-1" />
-                        <Translate contentKey="simpleBookingSystemApp.appointment.pendingApproval">Pending Approval</Translate>
-                      </span>
-                    )}
-                    {appointment.status === 'SCHEDULED' && (
-                      <span className="badge bg-success ms-2">
-                        <FontAwesomeIcon icon={faCheck} className="me-1" />
-                        <Translate contentKey="simpleBookingSystemApp.appointment.approved">Approved</Translate>
-                      </span>
-                    )}
-                    {appointment.status === 'CANCELLED' && (
-                      <span className="badge bg-danger ms-2">
-                        <FontAwesomeIcon icon={faTimes} className="me-1" />
-                        <Translate contentKey="simpleBookingSystemApp.appointment.cancelled">Cancelled</Translate>
-                      </span>
-                    )}
-                  </td>
+                  <td>{getStatusBadge(appointment.status)}</td>
                   <td>{appointment.user ? appointment.user.login : ''}</td>
                   <td>{appointment.service ? <Link to={`/service/${appointment.service.id}`}>{appointment.service.name}</Link> : ''}</td>
                   <td className="text-end">
@@ -273,7 +319,7 @@ export const Appointment = () => {
         )}
       </div>
       {totalItems ? (
-        <div className={displayedAppointments && displayedAppointments.length > 0 ? '' : 'd-none'}>
+        <div className={filteredAppointments && filteredAppointments.length > 0 ? '' : 'd-none'}>
           <div className="justify-content-center d-flex">
             <JhiItemCount page={paginationState.activePage} total={totalItems} itemsPerPage={paginationState.itemsPerPage} i18nEnabled />
           </div>

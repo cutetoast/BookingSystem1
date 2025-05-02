@@ -7,6 +7,7 @@ import com.mycompany.myapp.repository.AppointmentRepository;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.service.dto.AppointmentDTO;
 import com.mycompany.myapp.service.mapper.AppointmentMapper;
+import java.time.Instant;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,11 @@ public class AppointmentService {
         // Set status to REQUESTED by default for new appointments
         appointment.setStatus(AppointmentStatus.REQUESTED);
         
+        // Validate that the booking is not in the past
+        if (appointment.getStartTime() != null && appointment.getStartTime().isBefore(Instant.now())) {
+            throw new IllegalStateException("Cannot create appointments in the past. Please select a future date and time.");
+        }
+        
         // Prevent overlapping appointments for the same user/service
         if (appointment.getUser() != null && appointment.getService() != null) {
             var overlaps = appointmentRepository.findOverlappingAppointments(
@@ -94,6 +100,21 @@ public class AppointmentService {
     public AppointmentDTO update(AppointmentDTO appointmentDTO) {
         LOG.debug("Request to update Appointment : {}", appointmentDTO);
         Appointment appointment = appointmentMapper.toEntity(appointmentDTO);
+        
+        // If updating to CANCELLED status, enforce 24-hour cancellation policy
+        Optional<Appointment> existingAppointmentOpt = appointmentRepository.findById(appointmentDTO.getId());
+        if (existingAppointmentOpt.isPresent()) {
+            Appointment existingAppointment = existingAppointmentOpt.get();
+            if (appointment.getStatus() == AppointmentStatus.CANCELLED && 
+                existingAppointment.getStatus() != AppointmentStatus.CANCELLED) {
+                
+                // Check if cancellation is within 24 hours of appointment
+                if (existingAppointment.getStartTime().isBefore(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS))) {
+                    throw new IllegalStateException("Appointments can only be cancelled at least 24 hours before the scheduled time.");
+                }
+            }
+        }
+        
         appointment = appointmentRepository.save(appointment);
         return appointmentMapper.toDto(appointment);
     }
@@ -158,6 +179,18 @@ public class AppointmentService {
      */
     public void delete(Long id) {
         LOG.debug("Request to delete Appointment : {}", id);
+        
+        // Enforce 24-hour cancellation policy for deletion
+        Optional<Appointment> existingAppointmentOpt = appointmentRepository.findById(id);
+        if (existingAppointmentOpt.isPresent()) {
+            Appointment existingAppointment = existingAppointmentOpt.get();
+            
+            // Check if deletion is within 24 hours of appointment
+            if (existingAppointment.getStartTime().isBefore(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS))) {
+                throw new IllegalStateException("Appointments can only be cancelled at least 24 hours before the scheduled time.");
+            }
+        }
+        
         appointmentRepository.deleteById(id);
     }
 

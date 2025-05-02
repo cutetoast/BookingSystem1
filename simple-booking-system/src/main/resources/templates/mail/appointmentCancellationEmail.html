@@ -4,59 +4,121 @@
     <title th:text="#{email.appointment.cancellation.title}">Appointment Cancellation</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="icon" th:href="@{|${baseUrl}/favicon.ico|}" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #dc3545;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        border-radius: 5px 5px 0 0;
+      }
+      .content {
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .status-badge {
+        background-color: #f8d7da;
+        color: #842029;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .button {
+        display: inline-block;
+        background-color: #0d6efd;
+        color: white;
+        padding: 10px 15px;
+        text-decoration: none;
+        border-radius: 4px;
+        margin-top: 15px;
+      }
+      .footer {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+        text-align: center;
+        font-size: 14px;
+        color: #666;
+      }
+    </style>
   </head>
   <body>
-    <p th:text="#{email.greeting(${user.login})}">Dear User,</p>
-    
-    <p>
-      <span th:text="#{email.appointment.cancellation.text1}">Your appointment has been cancelled.</span>
-    </p>
-    
-    <div>
-      <h3 th:text="#{email.appointment.details}">Appointment Details</h3>
-      <table border="0" style="border-collapse: collapse; width: 100%; max-width: 500px; margin-bottom: 20px;">
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-            <strong th:text="#{email.appointment.service}">Service:</strong>
-          </td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;" th:text="${serviceName}">
-            Service Name
-          </td>
-        </tr>
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-            <strong th:text="#{email.appointment.date}">Date & Time:</strong>
-          </td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;" th:text="${appointmentDateTime}">
-            Appointment Date and Time
-          </td>
-        </tr>
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-            <strong th:text="#{email.appointment.status}">Status:</strong>
-          </td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-            <span 
-              style="background-color: #f8d7da; color: #842029; padding: 3px 8px; border-radius: 4px; font-size: 12px;"
-              th:text="${appointment.status}">CANCELLED</span>
-          </td>
-        </tr>
-      </table>
+    <div class="header">
+      <h2 th:text="#{email.appointment.cancellation.title}">Appointment Cancellation</h2>
     </div>
-    
-    <p>
-      <span th:text="#{email.appointment.cancellation.text2}">If you'd like to book another appointment, please visit our website.</span>
-    </p>
-    
-    <p>
-      <a th:href="@{|${baseUrl}/appointment/new|}"
-         th:text="#{email.appointment.book.new}">Book New Appointment</a>
-    </p>
-    
-    <p>
-      <span th:text="#{email.goodbye}">Regards,</span>
-      <br />
-      <em th:text="#{email.signature}">Simple Booking System Team</em>
-    </p>
+    <div class="content">
+      <p th:text="#{email.greeting(${user.login})}">Dear User,</p>
+      
+      <p>
+        <strong th:text="#{email.appointment.cancellation.text1}">Your appointment has been cancelled.</strong>
+      </p>
+      
+      <div>
+        <h3 th:text="#{email.appointment.details}">Appointment Details</h3>
+        <table>
+          <tr>
+            <td width="40%">
+              <strong th:text="#{email.appointment.service}">Service:</strong>
+            </td>
+            <td th:text="${serviceName}">
+              Service Name
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong th:text="#{email.appointment.date}">Date & Time:</strong>
+            </td>
+            <td th:text="${appointmentDateTime}">
+              Appointment Date and Time
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong th:text="#{email.appointment.status}">Status:</strong>
+            </td>
+            <td>
+              <span class="status-badge" th:text="${appointment.status}">CANCELLED</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <p>
+        <span th:text="#{email.appointment.cancellation.text2}">If you would like to reschedule, please create a new booking.</span>
+      </p>
+      
+      <p>
+        <a class="button" th:href="@{|${baseUrl}/appointment/new|}"
+           th:text="#{email.appointment.reschedule}">Book Again</a>
+      </p>
+      
+      <div class="footer">
+        <p>
+          <span th:text="#{email.goodbye}">Regards,</span>
+          <br />
+          <em th:text="#{email.signature}">Simple Booking System Team</em>
+        </p>
+      </div>
+    </div>
   </body>
 </html> 
