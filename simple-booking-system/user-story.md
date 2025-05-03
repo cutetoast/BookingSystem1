@@ -13,6 +13,8 @@
 - A user can make a maximum of 3 bookings per day.
 - The system should not allow selecting a past date/time for a new booking.
 - Users can view their past booking history.
+- If a booking request is rejected, the user must wait (e.g., 15 mins) before trying again for the same time slot.
+
 
 **Acceptance Criteria**:
 1. Users can view available time slots for a given service.
@@ -24,7 +26,7 @@
 7. The admin appointment list displays the approval status of each booking request (Pending/Approved).
 8. The system prevents users from booking more than 3 appointments per day.
 9. Users can view their past booking history.
-
+10. The system prevents users from immediately re-booking a rejected time slot (e.g., enforces a 15-minute waiting period).
 
 **Functional Requirements**:
 - View available time slots.
@@ -36,7 +38,7 @@
 - Admin can approve or reject booking requests.
 - Admin can view the list of appointments with their approval status.
 - User can view past booking history.
--Support light and dark themes.
+- Support light and dark themes.
 
 **Non-Functional Requirements**:
 - The system should be user-friendly and easy to navigate.
@@ -51,4 +53,4 @@
 - A user account section to manage bookings.
 - An admin panel to manage appointment requests and their approval status.
 - Responsive design for various screen sizes.
--Theme switcher (light/dark mode).
+- Theme switcher (light/dark mode).
