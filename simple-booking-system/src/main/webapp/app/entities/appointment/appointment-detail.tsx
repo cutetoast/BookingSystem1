@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button, Col, Row, Badge, Alert, Card, CardHeader, CardBody } from 'reactstrap';
-import { TextFormat, Translate } from 'react-jhipster';
+import { TextFormat, Translate, translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes, faClock, faInfo } from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 
 import { APP_DATE_FORMAT } from 'app/config/constants';
 import { useAppDispatch, useAppSelector } from 'app/config/store';
@@ -30,12 +31,33 @@ export const AppointmentDetail = () => {
   }, [updateSuccess]);
 
   const handleApprove = () => {
-    // Direct browser navigation workaround
-    window.location.href = `/api/appointments/${id}/approve-test`;
+    dispatch(approveAppointment(id))
+      .unwrap()
+      .then(() => {
+        toast.success(translate('simpleBookingSystemApp.appointment.approved'));
+      })
+      .catch(error => {
+        const errorMsg = error?.response?.data?.detail || 'Error approving appointment';
+        toast.error(errorMsg);
+        if (error?.response?.status === 401) {
+          toast.error('You must be an administrator to approve appointments');
+        }
+      });
   };
 
   const handleReject = () => {
-    dispatch(rejectAppointment(id));
+    dispatch(rejectAppointment(id))
+      .unwrap()
+      .then(() => {
+        toast.success(translate('simpleBookingSystemApp.appointment.rejected'));
+      })
+      .catch(error => {
+        const errorMsg = error?.response?.data?.detail || 'Error rejecting appointment';
+        toast.error(errorMsg);
+        if (error?.response?.status === 401) {
+          toast.error('You must be an administrator to reject appointments');
+        }
+      });
   };
 
   const userAuthorities = useAppSelector(state => state.authentication.account.authorities);

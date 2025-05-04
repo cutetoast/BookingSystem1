@@ -10,6 +10,7 @@ import BookingCalendar, { TimeSlot } from 'app/shared/components/calendar/bookin
 import { hasAnyAuthority } from 'app/shared/auth/private-route';
 import { AUTHORITIES } from 'app/config/constants';
 import { toast } from 'react-toastify';
+import { Translate, translate } from 'react-jhipster';
 import dayjs from 'dayjs';
 import { AppointmentStatus } from 'app/shared/model/enumerations/appointment-status.model';
 import './booking-page.scss';
@@ -90,11 +91,16 @@ const BookingPage = () => {
 
       dispatch(createAppointment(newAppointment)).then((action: any) => {
         if (action.type.endsWith('rejected')) {
-          toast.error(
-            action.error?.message?.includes('Overlapping appointment')
-              ? 'You already have an appointment for this service at the selected time.'
-              : 'Failed to book appointment. Please try again.',
-          );
+          const errorMessage = action.error?.message || '';
+          if (errorMessage.includes('Overlapping appointment')) {
+            toast.error('You already have an appointment for this service at the selected time.');
+          } else if (errorMessage.includes('Please wait')) {
+            // Extract minutes from error message
+            const minutes = errorMessage.match(/\d+/)?.[0] || '15';
+            toast.error(translate('simpleBookingSystemApp.appointment.cooldownError', { minutes }));
+          } else {
+            toast.error('Failed to book appointment. Please try again.');
+          }
         }
       });
     }

@@ -38,7 +38,8 @@
       "pastDateError": "Cannot book appointments in the past. Please select a future date.",
       "cancellationPolicy": "Cancellations are only allowed up to 24 hours before your scheduled appointment.",
       "approved": "Booking approved",
-      "rejected": "Booking rejected"
+      "rejected": "Booking rejected",
+      "cooldownError": "Please wait {{minutes}} minutes before trying to book this time slot again."
     }
   }
 }

@@ -13,7 +13,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from 'reactstrap';
-import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
+import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState, translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSort, faSortDown, faSortUp, faCheck, faTimes, faFilter, faClock, faHistory } from '@fortawesome/free-solid-svg-icons';
 import { APP_DATE_FORMAT } from 'app/config/constants';
@@ -22,8 +22,8 @@ import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-u
 import { useAppDispatch, useAppSelector } from 'app/config/store';
 import { hasAnyAuthority } from 'app/shared/auth/private-route';
 import { AUTHORITIES } from 'app/config/constants';
-
 import { getEntities, approveAppointment, rejectAppointment } from './appointment.reducer';
+import { toast } from 'react-toastify';
 
 export const Appointment = () => {
   const dispatch = useAppDispatch();
@@ -124,13 +124,19 @@ export const Appointment = () => {
 
   const handleReject = (id: string) => {
     setErrorMessage('');
-    // Use window.location to navigate to the test endpoint directly
-    // This will cause a page reload, but it will work around the API issue
-    window.location.href = `/api/appointments/${id}/reject-test`;
-    // After a short delay, navigate back to appointments
-    setTimeout(() => {
-      window.location.href = '/appointment';
-    }, 1000);
+    dispatch(rejectAppointment(id))
+      .unwrap()
+      .then(() => {
+        toast.success(translate('simpleBookingSystemApp.appointment.rejected'));
+        dispatch(getEntities({}));
+      })
+      .catch(error => {
+        const errorMsg = error?.response?.data?.detail || 'Error rejecting appointment';
+        toast.error(errorMsg);
+        if (error?.response?.status === 401) {
+          toast.error('You must be an administrator to reject appointments');
+        }
+      });
   };
 
   // Filter appointments based on the selected status

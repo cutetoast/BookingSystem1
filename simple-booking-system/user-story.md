@@ -26,7 +26,7 @@
 7. The admin appointment list displays the approval status of each booking request (Pending/Approved).
 8. The system prevents users from booking more than 3 appointments per day.
 9. Users can view their past booking history.
-10. The system prevents users from immediately re-booking a rejected time slot (e.g., enforces a 15-minute waiting period).
+10. The system prevents a user from immediately re-booking a rejected time slot (e.g., enforces a 15-minute waiting period).
 
 **Functional Requirements**:
 - View available time slots.

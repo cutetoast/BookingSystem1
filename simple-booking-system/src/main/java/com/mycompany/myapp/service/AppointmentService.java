@@ -1,13 +1,17 @@
 package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.domain.Appointment;
+import com.mycompany.myapp.domain.RejectedBooking;
 import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.domain.enumeration.AppointmentStatus;
 import com.mycompany.myapp.repository.AppointmentRepository;
+import com.mycompany.myapp.repository.RejectedBookingRepository;
 import com.mycompany.myapp.repository.UserRepository;
 import com.mycompany.myapp.service.dto.AppointmentDTO;
 import com.mycompany.myapp.service.mapper.AppointmentMapper;
+import com.mycompany.myapp.service.mapper.RejectedBookingMapper;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +30,7 @@ public class AppointmentService {
     private static final Logger LOG = LoggerFactory.getLogger(AppointmentService.class);
     
     private static final int MAX_APPOINTMENTS_PER_DAY = 3;
+    private static final long COOLDOWN_PERIOD_MINUTES = 15;
 
     private final AppointmentRepository appointmentRepository;
 
@@ -34,17 +39,23 @@ public class AppointmentService {
     private final MailService mailService;
     
     private final UserRepository userRepository;
+    private final RejectedBookingRepository rejectedBookingRepository;
+    private final RejectedBookingMapper rejectedBookingMapper;
 
     public AppointmentService(
         AppointmentRepository appointmentRepository, 
         AppointmentMapper appointmentMapper,
         MailService mailService,
-        UserRepository userRepository
+        UserRepository userRepository,
+        RejectedBookingRepository rejectedBookingRepository,
+        RejectedBookingMapper rejectedBookingMapper
     ) {
         this.appointmentRepository = appointmentRepository;
         this.appointmentMapper = appointmentMapper;
         this.mailService = mailService;
         this.userRepository = userRepository;
+        this.rejectedBookingRepository = rejectedBookingRepository;
+        this.rejectedBookingMapper = rejectedBookingMapper;
     }
 
     /**
@@ -66,8 +77,28 @@ public class AppointmentService {
             throw new IllegalStateException("Cannot create appointments in the past. Please select a future date and time.");
         }
         
-        // Prevent overlapping appointments for the same user/service
+        // Check cooldown period for rejected bookings
         if (appointment.getUser() != null && appointment.getService() != null) {
+            Optional<RejectedBooking> recentRejection = rejectedBookingRepository.findMostRecentRejection(
+                appointment.getUser().getId(),
+                appointment.getService().getId(),
+                appointment.getStartTime(),
+                appointment.getEndTime()
+            );
+            
+            if (recentRejection.isPresent()) {
+                Instant rejectionTime = recentRejection.get().getRejectionTime();
+                Instant cooldownEnd = rejectionTime.plus(COOLDOWN_PERIOD_MINUTES, ChronoUnit.MINUTES);
+                
+                if (Instant.now().isBefore(cooldownEnd)) {
+                    long remainingMinutes = ChronoUnit.MINUTES.between(Instant.now(), cooldownEnd);
+                    throw new IllegalStateException(
+                        String.format("Please wait %d minutes before trying to book this time slot again.", remainingMinutes)
+                    );
+                }
+            }
+            
+            // Prevent overlapping appointments for the same user/service
             var overlaps = appointmentRepository.findOverlappingAppointments(
                 appointment.getUser().getId(),
                 appointment.getService().getId(),
@@ -242,6 +273,15 @@ public class AppointmentService {
                     LOG.info("Updating appointment status from REQUESTED to CANCELLED");
                     appointment.setStatus(AppointmentStatus.CANCELLED);
                     appointment = appointmentRepository.save(appointment);
+                    
+                    // Create rejected booking record
+                    RejectedBooking rejectedBooking = new RejectedBooking();
+                    rejectedBooking.setUserId(appointment.getUser().getId());
+                    rejectedBooking.setServiceId(appointment.getService().getId());
+                    rejectedBooking.setStartTime(appointment.getStartTime());
+                    rejectedBooking.setEndTime(appointment.getEndTime());
+                    rejectedBooking.setRejectionTime(Instant.now());
+                    rejectedBookingRepository.save(rejectedBooking);
                     
                     // Notify user of rejection
                     User user = appointment.getUser();

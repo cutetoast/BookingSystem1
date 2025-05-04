@@ -9,6 +9,13 @@ name String required minlength(3) maxlength(50),
 description TextBlob,
 price BigDecimal required min(0)
 }
+entity RejectedBooking {
+userId Long required,
+serviceId Long required,
+startTime Instant required,
+endTime Instant required,
+rejectionTime Instant required
+}
 enum AppointmentStatus {
 REQUESTED, // New status for initial booking request
 SCHEDULED, // After admin approval (formerly just SCHEDULED)
@@ -19,8 +26,6 @@ relationship ManyToOne {
 Appointment{user(login) required} to User with builtInEntity,
 Appointment{service(name)} to Service
 }
-service Appointment, Service with serviceClass
-paginate Appointment, Service with pagination
-dto Appointment, Service with mapstruct
-**Explanation:**
-The updated user story adds significant detail regarding business rules, UI/UX, and functional/non-functional requirements.  However, *none of these updates require changes to the JDL*.  The JDL defines the *data model*, and the existing model is sufficient to support the described features.  The implementation of these features (overlap prevention, email confirmations, cancellation policies, admin approval, booking limits, UI design, etc.) should be done in the application code (Java/TypeScript), not in the JDL.  Therefore, the JDL remains unchanged.  Attempting to represent these business rules in the JDL would be overly complex and would not effectively translate into application logic.  The focus should be on implementing the described functionality using the existing data model defined by this JDL.
+service Appointment, Service, RejectedBooking with serviceClass
+paginate Appointment, Service, RejectedBooking with pagination
+dto Appointment, Service, RejectedBooking with mapstruct
