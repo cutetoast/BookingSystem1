@@ -29,3 +29,23 @@ Appointment{service(name)} to Service
 service Appointment, Service, RejectedBooking with serviceClass
 paginate Appointment, Service, RejectedBooking with pagination
 dto Appointment, Service, RejectedBooking with mapstruct
+// While the user story describes additional functionality,
+// it doesn't explicitly require new entities or relationships.
+// The business logic requirements (like booking limits, overlap prevention,
+// cancellation windows, and auto-cancellation) will be implemented
+// in the service layer and not directly reflected in the JDL.
+// The same applies to email notifications and UI design aspects.
+// Therefore, no changes are made to the entities or relationships based on the updated user story.
+**Explanation of why no changes were made:**
+The updated user story introduces significant business logic and functional requirements, but these are primarily implemented in the service/application layer, not directly in the data model.  While the JDL defines the entities and their relationships, it doesn't define business rules or application logic.
+Here's how the requirements would be handled outside of the JDL:
+* **Booking Overlaps:**  This would be handled in the `AppointmentService` using queries to check for existing appointments in the given time slot.
+* **Confirmation Email:** This would be handled by an email service triggered by the `AppointmentService` after the admin approves the appointment.
+* **Cancellation Window:**  The `AppointmentService` would enforce this rule when a user attempts to cancel.
+* **Admin Approval:** This would involve adding a UI element for admins to approve/reject appointments and updating the `Appointment` status accordingly.
+* **Booking Limits:** The `AppointmentService` would check the number of bookings for a user within a given day before allowing a new booking.
+* **Past Date/Time Restriction:** Validation in the UI and/or the `AppointmentService` would prevent selecting past dates/times.
+* **Booking History:** This would be implemented with a query in the `AppointmentService` to retrieve past appointments for a user.
+* **Rejection Waiting Period:** The `RejectedBooking` entity and associated logic in the `AppointmentService` would handle this requirement.
+* **Auto-Cancellation of Unconfirmed Bookings:** A scheduled task or background process would periodically check for unconfirmed bookings and cancel them after the specified time.
+The JDL only needs to be updated if new entities, relationships, or fields are required to store data related to these features.  Since the current entities and relationships are sufficient, no changes are needed.  The implementation details of the user story will be handled in the application code.

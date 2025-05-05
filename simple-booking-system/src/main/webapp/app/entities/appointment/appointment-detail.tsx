@@ -69,6 +69,13 @@ export const AppointmentDetail = () => {
     ? new Date(appointmentEntity.startTime).getTime() - new Date().getTime() < 24 * 60 * 60 * 1000
     : false;
 
+  // Add logic to detect auto-cancelled (never scheduled) appointments
+  const wasAutoCancelled =
+    appointmentEntity.status === 'CANCELLED' &&
+    !appointmentEntity.scheduledTime &&
+    appointmentEntity.createdDate &&
+    !appointmentEntity.approvedBy;
+
   // Helper function for status badges
   const getStatusBadge = status => {
     switch (status) {
@@ -197,6 +204,14 @@ export const AppointmentDetail = () => {
                   Remember that cancellations are only allowed up to 24 hours before the scheduled appointment time.
                 </Translate>
               </span>
+            </Alert>
+          )}
+          {appointmentEntity.status === 'CANCELLED' && wasAutoCancelled && (
+            <Alert color="warning" className="mt-3">
+              <FontAwesomeIcon icon={faInfo} className="me-2" />
+              <Translate contentKey="simpleBookingSystemApp.appointment.autoCancelled">
+                This booking was automatically cancelled because it was not confirmed in time.
+              </Translate>
             </Alert>
           )}
           <Button tag={Link} to="/appointment" replace color="info" data-cy="entityDetailsBackButton">

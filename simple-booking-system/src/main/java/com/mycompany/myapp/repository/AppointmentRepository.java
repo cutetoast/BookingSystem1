@@ -60,4 +60,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
      */
     @Query("select a from Appointment a left join fetch a.service where a.user.login = ?#{authentication.name} and a.endTime < CURRENT_TIMESTAMP order by a.startTime desc")
     Page<Appointment> findPastAppointmentsForCurrentUser(Pageable pageable);
+
+    /**
+     * Find all unconfirmed (REQUESTED) appointments created before a certain time.
+     */
+    @Query("select a from Appointment a where a.status = 'REQUESTED' and a.startTime < :cutoff")
+    List<Appointment> findUnconfirmedAppointmentsBefore(@Param("cutoff") java.time.Instant cutoff);
 }

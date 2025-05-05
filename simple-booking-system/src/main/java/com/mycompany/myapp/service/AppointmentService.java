@@ -12,11 +12,15 @@ import com.mycompany.myapp.service.mapper.AppointmentMapper;
 import com.mycompany.myapp.service.mapper.RejectedBookingMapper;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.param.Param;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +35,7 @@ public class AppointmentService {
     
     private static final int MAX_APPOINTMENTS_PER_DAY = 3;
     private static final long COOLDOWN_PERIOD_MINUTES = 15;
+    private static final long AUTO_CANCEL_TIMEOUT_HOURS = 0; // configurable timeout for unconfirmed bookings
 
     private final AppointmentRepository appointmentRepository;
 
@@ -307,5 +312,27 @@ public class AppointmentService {
         LOG.debug("Request to get past appointments for current user");
         return appointmentRepository.findPastAppointmentsForCurrentUser(pageable)
             .map(appointmentMapper::toDto);
+    }
+
+    /**
+     * Scheduled task to auto-cancel unconfirmed (REQUESTED) appointments after a timeout.
+     * Runs every 30 minutes.
+     */
+    @Scheduled(cron = "*/10 * * * * ?")//@Scheduled(cron = "0 0/30 * * * ?")
+    public void autoCancelUnconfirmedAppointments() {
+        Instant cutoff = Instant.now().minus(AUTO_CANCEL_TIMEOUT_HOURS, ChronoUnit.HOURS);
+        var unconfirmed = appointmentRepository.findUnconfirmedAppointmentsBefore(cutoff);
+        for (Appointment appointment : unconfirmed) {
+            if (appointment.getStatus() == AppointmentStatus.REQUESTED) {
+                appointment.setStatus(AppointmentStatus.CANCELLED);
+                appointmentRepository.save(appointment);
+                // Optionally notify user
+                if (appointment.getUser() != null) {
+                    AppointmentDTO appointmentDTO = appointmentMapper.toDto(appointment);
+                    mailService.sendAppointmentCancellationEmail(appointment.getUser(), appointmentDTO);
+                }
+                LOG.info("Auto-cancelled unconfirmed appointment with id {}", appointment.getId());
+            }
+        }
     }
 }

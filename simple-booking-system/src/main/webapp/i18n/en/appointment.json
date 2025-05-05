@@ -39,7 +39,8 @@
       "cancellationPolicy": "Cancellations are only allowed up to 24 hours before your scheduled appointment.",
       "approved": "Booking approved",
       "rejected": "Booking rejected",
-      "cooldownError": "Please wait {{minutes}} minutes before trying to book this time slot again."
+      "cooldownError": "Please wait {{minutes}} minutes before trying to book this time slot again.",
+      "autoCancelled": "This booking was automatically cancelled because it was not confirmed in time."
     }
   }
 }
