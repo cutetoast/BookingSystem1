@@ -15,6 +15,7 @@
 - Users can view their past booking history.
 - If a booking request is rejected, the user must wait (e.g., 15 mins) before trying again for the same time slot.
 - Unconfirmed bookings should be auto-cancelled if the admin doesn't approve them within 2 hours.
+- Services can be toggled on or off by admins. If a service is inactive, it must not appear in the booking form or be selectable through the API.
 
 
 **Acceptance Criteria**:
@@ -28,7 +29,7 @@
 8. The system prevents users from booking more than 3 appointments per day.
 9. Users can view their past booking history.
 10. The system prevents a user from immediately re-booking a rejected time slot (e.g., enforces a 15-minute waiting period).
-11. The system automatically cancels unconfirmed bookings after X hours.
+11. The system automatically cancels unconfirmed bookings after 2 hours.
 
 **Functional Requirements**:
 - View available time slots.
